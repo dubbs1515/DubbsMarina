@@ -1,6 +1,6 @@
 /***********************************************************************************
  Author: Christopher Dubbs
- API Name: Basic Marina API
+ API Name: Marina API
  Date Last Modified: October 21st, 2018
  Last Modified By: Christopher Dubbs
  Hosting: Google Cloud AppEngine and Google Cloud Datastore
@@ -62,7 +62,7 @@ function getTodaysDate() {
 
  /***********************************************************************************
  * Name: addCurShipInfo
- * Description: Checks the list of slips for a ship.
+ * Description: Appends the link to the ship queried to the json response. 
  **********************************************************************************/
 function addCurShipUrl(slip) {
     if(slip.current_boat != null) {
@@ -367,7 +367,7 @@ router.put('/slips/:slip_id/ships/:ship_id', function(req, res) {
     let filterVal = req.params.ship_id;
     let filterProperty = "current_boat";
 
-    get_entities_prop(SLIP, filterProperty, filterVal)
+    get_entities_prop(SLIP, filterProperty, filterVal)  // Check ship for current slip
     .then((currSlip) => {
         console.log("CURRENT SLIP INFO: " + currSlip) 
         console.log("Passed Ship Id: " + req.params.ship_id);
@@ -380,15 +380,15 @@ router.put('/slips/:slip_id/ships/:ship_id', function(req, res) {
                 put_slip(currSlip[0].id, currSlip[0].number);
             } 
         }
-        get_entity(SLIP, req.params.slip_id) // Returns a promise
+        get_entity(SLIP, req.params.slip_id) // Check slip for vacancy
         .then((slip) => {
             // If slip is available dock ship, otherwise return forbidden
-            let arrival_date = getTodaysDate();
+            let arrival_date = getTodaysDate(); // Add the date of arrival
             if(slip[0].current_boat == null) {
                 put_slip(req.params.slip_id, slip[0].number, req.params.ship_id, arrival_date)
                 .then(res.status(200).end());
             } else {
-                res.status(403).end();
+                res.status(403).send("Sorry, the slip requested is occupied.");  // bad request
             } 
         });
     });
